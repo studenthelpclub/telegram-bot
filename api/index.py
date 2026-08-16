@@ -4,7 +4,8 @@ from flask import Flask, request
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 TOKEN = '8738828553:AAH10YEMWy-QVaGGWssAK6JF3N8rwP4ShHs'
-bot = telebot.TeleBot(TOKEN)
+# Yahan threaded=False add kiya gaya hai taaki Vercel process ko beech mein na roke
+bot = telebot.TeleBot(TOKEN, threaded=False)
 app = Flask(__name__)
 
 REQUIRED_CHATS = ['@studenthelpclub', '@studenthelpclubofficial'] 
@@ -53,7 +54,6 @@ def verify_callback(call):
     else:
         bot.answer_callback_query(call.id, "Aapne abhi tak sabhi channels join nahi kiye hain. Kripya dono ko join karein!", show_alert=True)
 
-# Vercel Serverless Webhook Route (Simplified)
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
