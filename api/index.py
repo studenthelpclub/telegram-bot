@@ -10,7 +10,6 @@ app = Flask(__name__)
 REQUIRED_CHATS = ['@studenthelpclub', '@studenthelpclubofficial'] 
 FINAL_GROUP_LINK = "https://t.me/+YwUmMpjCgHFkZDdl"
 
-# Aapke Websites aur Tools ke Links
 ASSIGNMENT_WEBSITE = "https://studenthelpclub.in" 
 JOBS_WEBSITE = "https://jobs.studenthelpclub.in"
 UTILITY_TOOLS = "https://shctools.in/"
@@ -26,15 +25,16 @@ def check_membership(user_id):
             return False
     return True
 
-# Main Menu (Verification ke baad dikhne wale buttons)
 def get_main_menu():
     markup = InlineKeyboardMarkup(row_width=1)
+    # Buttons ko define kiya gaya hai
+    btn_group = InlineKeyboardButton("📚 IGNOU Solved Assignments", url=FINAL_GROUP_LINK)
     btn_website = InlineKeyboardButton("🌐 Assignment Website", url=ASSIGNMENT_WEBSITE)
     btn_jobs = InlineKeyboardButton("💼 Jobs Updates", url=JOBS_WEBSITE)
     btn_tools = InlineKeyboardButton("🛠️ Utility Tools", url=UTILITY_TOOLS)
-    btn_group = InlineKeyboardButton("📚 IGNOU Solved Assignments", url=FINAL_GROUP_LINK)
     
-    markup.add(btn_website, btn_jobs, btn_tools, btn_group)
+    # Yahan add karne ke sequence ko change kiya gaya hai (Group sabse pehle)
+    markup.add(btn_group, btn_website, btn_jobs, btn_tools)
     return markup
 
 @bot.message_handler(commands=['start'])
