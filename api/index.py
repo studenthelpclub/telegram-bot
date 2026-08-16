@@ -3,19 +3,14 @@ import telebot
 from flask import Flask, request
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-# Aapka Latest Token
 TOKEN = '8738828553:AAH10YEMWy-QVaGGWssAK6JF3N8rwP4ShHs'
 bot = telebot.TeleBot(TOKEN)
 app = Flask(__name__)
 
-# Aapke Public Channels jinko join karna zaroori hai
 REQUIRED_CHATS = ['@studenthelpclub', '@studenthelpclubofficial'] 
-
-# Verify hone ke baad milne wala Final Private Link
 FINAL_GROUP_LINK = "https://t.me/+YwUmMpjCgHFkZDdl"
 
 def check_membership(user_id):
-    """Check karta hai ki user sabhi required chats mein hai ya nahi."""
     for chat_id in REQUIRED_CHATS:
         try:
             member = bot.get_chat_member(chat_id, user_id)
@@ -31,10 +26,8 @@ def send_welcome(message):
     user_id = message.from_user.id
     
     if check_membership(user_id):
-        # Agar user ne pehle se sab join kiya hua hai
         bot.send_message(message.chat.id, f"Welcome back to Student Help Club! 🎉\nYahan aapka assignment group link hai: {FINAL_GROUP_LINK}")
     else:
-        # Agar join nahi kiya hai toh buttons dikhayega
         markup = InlineKeyboardMarkup()
         markup.add(InlineKeyboardButton("📢 Join Main Channel", url="https://t.me/studenthelpclub"))
         markup.add(InlineKeyboardButton("👥 Join Chat Group", url="https://t.me/studenthelpclubofficial"))
@@ -51,20 +44,17 @@ def verify_callback(call):
     user_id = call.from_user.id
     
     if check_membership(user_id):
-        # 1. Join karne ke baad pichla button wala message delete karein
         try:
             bot.delete_message(call.message.chat.id, call.message.message_id)
         except Exception as e:
             print("Message delete nahi ho paya:", e)
             
-        # 2. Final link bhej dein
         bot.send_message(call.message.chat.id, f"Verification successful! ✅\nYe raha aapka Ignou Solved Assignment group: {FINAL_GROUP_LINK}")
     else:
-        # Pop-up alert agar bina join kiye button dabaya
         bot.answer_callback_query(call.id, "Aapne abhi tak sabhi channels join nahi kiye hain. Kripya dono ko join karein!", show_alert=True)
 
-# Vercel Webhook Setup (Isme koi change nahi karna hai)
-@app.route('/', defaults={'path': ''})
+# Yahan par 'POST' method add kiya gaya hai jisse 405 error fix ho jayega
+@app.route('/', defaults={'path': ''}, methods=['POST', 'GET'])
 @app.route('/<path:path>', methods=['POST', 'GET'])
 def webhook(path):
     if request.method == 'POST':
@@ -72,4 +62,4 @@ def webhook(path):
         update = telebot.types.Update.de_json(json_string)
         bot.process_new_updates([update])
         return '!', 200
-    return 'Student Help Club Bot is alive and running on Vercel!', 200
+    return 'Student Help Club Bot is alive and running without errors!', 200
