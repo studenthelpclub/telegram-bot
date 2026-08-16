@@ -53,13 +53,12 @@ def verify_callback(call):
     else:
         bot.answer_callback_query(call.id, "Aapne abhi tak sabhi channels join nahi kiye hain. Kripya dono ko join karein!", show_alert=True)
 
-# Yahan par 'POST' method add kiya gaya hai jisse 405 error fix ho jayega
-@app.route('/', defaults={'path': ''}, methods=['POST', 'GET'])
-@app.route('/<path:path>', methods=['POST', 'GET'])
-def webhook(path):
+# Vercel Serverless Webhook Route (Simplified)
+@app.route('/', methods=['GET', 'POST'])
+def index():
     if request.method == 'POST':
         json_string = request.get_data().decode('utf-8')
         update = telebot.types.Update.de_json(json_string)
         bot.process_new_updates([update])
-        return '!', 200
-    return 'Student Help Club Bot is alive and running without errors!', 200
+        return 'OK', 200
+    return 'Student Help Club Bot is alive and running 24/7!', 200
