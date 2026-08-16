@@ -4,7 +4,6 @@ from flask import Flask, request
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 TOKEN = '8738828553:AAH10YEMWy-QVaGGWssAK6JF3N8rwP4ShHs'
-# Yahan threaded=False add kiya gaya hai taaki Vercel process ko beech mein na roke
 bot = telebot.TeleBot(TOKEN, threaded=False)
 app = Flask(__name__)
 
@@ -27,17 +26,33 @@ def send_welcome(message):
     user_id = message.from_user.id
     
     if check_membership(user_id):
-        bot.send_message(message.chat.id, f"Welcome back to Student Help Club! 🎉\nYahan aapka assignment group link hai: {FINAL_GROUP_LINK}")
+        # Agar pehle se joined hai toh professional welcome back message
+        welcome_back = (
+            "👋 <b>Welcome back to Student Help Club!</b>\n\n"
+            "Aap already hamare verified member hain. 🎉\n\n"
+            "📁 <b>Aapke IGNOU Solved Assignments yahan hain:</b>\n"
+            f"👉 {FINAL_GROUP_LINK}"
+        )
+        bot.send_message(message.chat.id, welcome_back, parse_mode='HTML')
     else:
+        # Professional Join Message
         markup = InlineKeyboardMarkup()
         markup.add(InlineKeyboardButton("📢 Join Main Channel", url="https://t.me/studenthelpclub"))
         markup.add(InlineKeyboardButton("👥 Join Chat Group", url="https://t.me/studenthelpclubofficial"))
         markup.add(InlineKeyboardButton("✅ JOINED", callback_data="verify_join"))
         
+        join_msg = (
+            "👋 <b>Welcome to Student Help Club Bot!</b>\n\n"
+            "📚 IGNOU ke free solved assignments aur latest updates access karne ke liye, "
+            "kripya hamare official channels ko join karein.\n\n"
+            "👇 <i>Neeche diye gaye buttons par click karein aur join karne ke baad '✅ JOINED' dabayein.</i>"
+        )
+        
         bot.send_message(
             message.chat.id, 
-            "🔐 Bot use karne ke liye pehle hamare niche diye gaye dono channel/group ko join karein:", 
-            reply_markup=markup
+            join_msg, 
+            reply_markup=markup,
+            parse_mode='HTML'
         )
 
 @bot.callback_query_handler(func=lambda call: call.data == "verify_join")
@@ -48,11 +63,24 @@ def verify_callback(call):
         try:
             bot.delete_message(call.message.chat.id, call.message.message_id)
         except Exception as e:
-            print("Message delete nahi ho paya:", e)
+            pass # Error print karne ki zaroorat nahi
             
-        bot.send_message(call.message.chat.id, f"Verification successful! ✅\nYe raha aapka Ignou Solved Assignment group: {FINAL_GROUP_LINK}")
+        # Professional Success Message
+        success_msg = (
+            "✅ <b>Verification Successful!</b>\n\n"
+            "Dhanyawad! Ab aap Student Help Club ke verified member hain. 🎉\n\n"
+            "📁 <b>Aapka IGNOU Solved Assignment Group link:</b>\n"
+            f"👉 {FINAL_GROUP_LINK}\n\n"
+            "<i>Is link par click karke apna private group join karein.</i>"
+        )
+        bot.send_message(call.message.chat.id, success_msg, parse_mode='HTML')
     else:
-        bot.answer_callback_query(call.id, "Aapne abhi tak sabhi channels join nahi kiye hain. Kripya dono ko join karein!", show_alert=True)
+        # Professional Alert Pop-up
+        bot.answer_callback_query(
+            call.id, 
+            "⚠️ Alert: Aapne abhi tak dono channels join nahi kiye hain. Kripya pehle join karein aur phir verify karein.", 
+            show_alert=True
+        )
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
