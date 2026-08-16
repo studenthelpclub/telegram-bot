@@ -10,6 +10,11 @@ app = Flask(__name__)
 REQUIRED_CHATS = ['@studenthelpclub', '@studenthelpclubofficial'] 
 FINAL_GROUP_LINK = "https://t.me/+YwUmMpjCgHFkZDdl"
 
+# Aapke Websites aur Tools ke Links
+ASSIGNMENT_WEBSITE = "https://studenthelpclub.in" 
+JOBS_WEBSITE = "https://jobs.studenthelpclub.in"
+UTILITY_TOOLS = "https://shctools.in/"
+
 def check_membership(user_id):
     for chat_id in REQUIRED_CHATS:
         try:
@@ -21,29 +26,42 @@ def check_membership(user_id):
             return False
     return True
 
+# Main Menu (Verification ke baad dikhne wale buttons)
+def get_main_menu():
+    markup = InlineKeyboardMarkup(row_width=1)
+    btn_website = InlineKeyboardButton("🌐 Assignment Website", url=ASSIGNMENT_WEBSITE)
+    btn_jobs = InlineKeyboardButton("💼 Jobs Updates", url=JOBS_WEBSITE)
+    btn_tools = InlineKeyboardButton("🛠️ Utility Tools", url=UTILITY_TOOLS)
+    btn_group = InlineKeyboardButton("📚 IGNOU Solved Assignments", url=FINAL_GROUP_LINK)
+    
+    markup.add(btn_website, btn_jobs, btn_tools, btn_group)
+    return markup
+
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     user_id = message.from_user.id
     
     if check_membership(user_id):
-        # Agar pehle se joined hai toh professional welcome back message
         welcome_back = (
             "👋 <b>Welcome back to Student Help Club!</b>\n\n"
-            "Aap already hamare verified member hain. 🎉\n\n"
-            "📁 <b>Aapke IGNOU Solved Assignments yahan hain:</b>\n"
-            f"👉 {FINAL_GROUP_LINK}"
+            "Aap already verified member hain. 🎉\n\n"
+            "👇 <i>Neeche diye gaye buttons se apni zaroorat ka option select karein:</i>"
         )
-        bot.send_message(message.chat.id, welcome_back, parse_mode='HTML')
+        bot.send_message(
+            message.chat.id, 
+            welcome_back, 
+            parse_mode='HTML', 
+            reply_markup=get_main_menu()
+        )
     else:
-        # Professional Join Message
-        markup = InlineKeyboardMarkup()
+        markup = InlineKeyboardMarkup(row_width=1)
         markup.add(InlineKeyboardButton("📢 Join Main Channel", url="https://t.me/studenthelpclub"))
         markup.add(InlineKeyboardButton("👥 Join Chat Group", url="https://t.me/studenthelpclubofficial"))
         markup.add(InlineKeyboardButton("✅ JOINED", callback_data="verify_join"))
         
         join_msg = (
             "👋 <b>Welcome to Student Help Club Bot!</b>\n\n"
-            "📚 IGNOU ke free solved assignments aur latest updates access karne ke liye, "
+            "📚 IGNOU ke free solved assignments, jobs aur latest updates access karne ke liye, "
             "kripya hamare official channels ko join karein.\n\n"
             "👇 <i>Neeche diye gaye buttons par click karein aur join karne ke baad '✅ JOINED' dabayein.</i>"
         )
@@ -63,19 +81,20 @@ def verify_callback(call):
         try:
             bot.delete_message(call.message.chat.id, call.message.message_id)
         except Exception as e:
-            pass # Error print karne ki zaroorat nahi
+            pass 
             
-        # Professional Success Message
         success_msg = (
             "✅ <b>Verification Successful!</b>\n\n"
             "Dhanyawad! Ab aap Student Help Club ke verified member hain. 🎉\n\n"
-            "📁 <b>Aapka IGNOU Solved Assignment Group link:</b>\n"
-            f"👉 {FINAL_GROUP_LINK}\n\n"
-            "<i>Is link par click karke apna private group join karein.</i>"
+            "👇 <i>Neeche diye gaye buttons se Assignment website, Jobs, Tools ya secret group access karein:</i>"
         )
-        bot.send_message(call.message.chat.id, success_msg, parse_mode='HTML')
+        bot.send_message(
+            call.message.chat.id, 
+            success_msg, 
+            parse_mode='HTML',
+            reply_markup=get_main_menu()
+        )
     else:
-        # Professional Alert Pop-up
         bot.answer_callback_query(
             call.id, 
             "⚠️ Alert: Aapne abhi tak dono channels join nahi kiye hain. Kripya pehle join karein aur phir verify karein.", 
