@@ -40,13 +40,11 @@ def send_welcome(message):
     user_id = message.from_user.id
     command = message.text.split()[0].lower() 
     
-    # 🧹 SMART CHAT CLEANER: Ye current command aur pichle kuch messages ko dhundh kar delete karega
-    # Range 6 ka matlab hai: current message aur usse pehle ke 5 messages clean karega
     for i in range(message.message_id, message.message_id - 6, -1):
         try:
             bot.delete_message(message.chat.id, i)
         except Exception:
-            pass # Agar koi message pehle se delete ho chuka hai, toh error ignore karega
+            pass 
 
     if check_membership(user_id):
         if command == '/restart':
@@ -94,7 +92,6 @@ def verify_callback(call):
     
     if check_membership(user_id):
         try:
-            # JOINED button dabane par wo purana verify wala message delete ho jayega
             bot.delete_message(call.message.chat.id, call.message.message_id)
         except Exception as e:
             pass 
@@ -111,12 +108,13 @@ def verify_callback(call):
             reply_markup=get_main_menu()
         )
     else:
+        # Professional & Clean Notification (show_alert=False kiya gaya hai taaki pop-up box na aaye)
         bot.answer_callback_query(
             call.id, 
-            "⚠️ Alert: Aapne abhi tak dono channels join nahi kiye hain. Kripya pehle join karein aur phir verify karein.", 
-            show_alert=True
+            "❌ Kripya pehle upar diye gaye dono channels join karein!", 
+            show_alert=False
         )
-        # Function check karne ke liye ki message bhejne wala Admin hai ya nahi
+
 def is_admin(chat_id, user_id):
     try:
         member = bot.get_chat_member(chat_id, user_id)
@@ -124,20 +122,18 @@ def is_admin(chat_id, user_id):
     except:
         return False
 
-# Group ke messages ko control karne ka rule
-@bot.message_handler(func=lambda message: message.chat.type in ['group', 'supergroup'])
+@bot.message_handler(func=lambda message: message.chat.type in ['group', 'supergroup'], content_types=['text', 'audio', 'document', 'photo', 'sticker', 'video', 'video_note', 'voice', 'location', 'contact'])
 def restrict_to_pdf(message):
-    # 1. Agar message bhejne wala Admin/Owner (Aap) hain, toh bot kuch delete nahi karega
     if is_admin(message.chat.id, message.from_user.id):
         return
     
-    # 2. Agar user normal member hai, toh check karega ki kya usne 'Document' bheja hai
     if message.content_type == 'document':
-        # Check karega ki document 'PDF' format mein hai ya nahi
-        if message.document.mime_type == 'application/pdf' or message.document.file_name.lower().endswith('.pdf'):
-            return # Agar PDF hai, toh message group mein rehne dega
+        file_name = message.document.file_name.lower() if message.document.file_name else ""
+        mime_type = message.document.mime_type if message.document.mime_type else ""
+        
+        if mime_type == 'application/pdf' or file_name.endswith('.pdf'):
+            return 
             
-    # 3. Agar PDF ke alawa kuch bhi aur hai (Text, Photo, Video, Link), toh turant delete kar dega
     try:
         bot.delete_message(message.chat.id, message.message_id)
     except Exception as e:
