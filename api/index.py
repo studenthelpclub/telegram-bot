@@ -116,6 +116,32 @@ def verify_callback(call):
             "⚠️ Alert: Aapne abhi tak dono channels join nahi kiye hain. Kripya pehle join karein aur phir verify karein.", 
             show_alert=True
         )
+        # Function check karne ke liye ki message bhejne wala Admin hai ya nahi
+def is_admin(chat_id, user_id):
+    try:
+        member = bot.get_chat_member(chat_id, user_id)
+        return member.status in ['creator', 'administrator']
+    except:
+        return False
+
+# Group ke messages ko control karne ka rule
+@bot.message_handler(func=lambda message: message.chat.type in ['group', 'supergroup'])
+def restrict_to_pdf(message):
+    # 1. Agar message bhejne wala Admin/Owner (Aap) hain, toh bot kuch delete nahi karega
+    if is_admin(message.chat.id, message.from_user.id):
+        return
+    
+    # 2. Agar user normal member hai, toh check karega ki kya usne 'Document' bheja hai
+    if message.content_type == 'document':
+        # Check karega ki document 'PDF' format mein hai ya nahi
+        if message.document.mime_type == 'application/pdf' or message.document.file_name.lower().endswith('.pdf'):
+            return # Agar PDF hai, toh message group mein rehne dega
+            
+    # 3. Agar PDF ke alawa kuch bhi aur hai (Text, Photo, Video, Link), toh turant delete kar dega
+    try:
+        bot.delete_message(message.chat.id, message.message_id)
+    except Exception as e:
+        pass
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
