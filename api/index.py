@@ -4,7 +4,7 @@ from flask import Flask, request
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 # Aapka Bot Token (image_d78df8.png se)
-TOKEN = '8738828553:AAEhJWrWNIPCUbPdi9-OQ13Jf4twNDUwuP4'
+TOKEN = '8738828553:AAH10YEMWy-QVaGGWssAK6JF3N8rwP4ShHs'
 bot = telebot.TeleBot(TOKEN)
 app = Flask(__name__)
 
