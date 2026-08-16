@@ -27,13 +27,11 @@ def check_membership(user_id):
 
 def get_main_menu():
     markup = InlineKeyboardMarkup(row_width=1)
-    # Buttons ko define kiya gaya hai
     btn_group = InlineKeyboardButton("📚 IGNOU Solved Assignments", url=FINAL_GROUP_LINK)
     btn_website = InlineKeyboardButton("🌐 Assignment Website", url=ASSIGNMENT_WEBSITE)
     btn_jobs = InlineKeyboardButton("💼 Jobs Updates", url=JOBS_WEBSITE)
     btn_tools = InlineKeyboardButton("🛠️ Utility Tools", url=UTILITY_TOOLS)
     
-    # Yahan add karne ke sequence ko change kiya gaya hai (Group sabse pehle)
     markup.add(btn_group, btn_website, btn_jobs, btn_tools)
     return markup
 
@@ -41,6 +39,15 @@ def get_main_menu():
 def send_welcome(message):
     user_id = message.from_user.id
     
+    # 🧹 Yahan chat clean karne ka code add kiya gaya hai
+    try:
+        # User ne jo '/start' bheja hai usko delete karega
+        bot.delete_message(message.chat.id, message.message_id)
+        # Bot ka theek isse pehle wala purana message delete karega
+        bot.delete_message(message.chat.id, message.message_id - 1)
+    except Exception:
+        pass # Agar purana message nahi mila toh error ignore kar dega
+
     if check_membership(user_id):
         welcome_back = (
             "👋 <b>Welcome back to Student Help Club!</b>\n\n"
