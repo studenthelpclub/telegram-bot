@@ -3,15 +3,16 @@ import telebot
 from flask import Flask, request
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-# Aapka Bot Token (image_d78df8.png se)
+# Aapka Latest Token
 TOKEN = '8738828553:AAH10YEMWy-QVaGGWssAK6JF3N8rwP4ShHs'
 bot = telebot.TeleBot(TOKEN)
 app = Flask(__name__)
 
-# Yahan apne Student Help Club channel aur group ka username daalein (Bina link ke, bas @username)
-REQUIRED_CHATS = ['@your_channel_username', '@your_group_username'] 
-# Join karne ke baad jo main group ya link dena hai
-FINAL_GROUP_LINK = "https://t.me/your_secret_group_link"
+# Aapke Public Channels jinko join karna zaroori hai
+REQUIRED_CHATS = ['@studenthelpclub', '@studenthelpclubofficial'] 
+
+# Verify hone ke baad milne wala Final Private Link
+FINAL_GROUP_LINK = "https://t.me/+YwUmMpjCgHFkZDdl"
 
 def check_membership(user_id):
     """Check karta hai ki user sabhi required chats mein hai ya nahi."""
@@ -30,18 +31,18 @@ def send_welcome(message):
     user_id = message.from_user.id
     
     if check_membership(user_id):
-        # Agar already joined hai
-        bot.send_message(message.chat.id, f"Welcome back to Student Help Club! 🎉\nYahan aapka group link hai: {FINAL_GROUP_LINK}")
+        # Agar user ne pehle se sab join kiya hua hai
+        bot.send_message(message.chat.id, f"Welcome back to Student Help Club! 🎉\nYahan aapka assignment group link hai: {FINAL_GROUP_LINK}")
     else:
-        # Agar joined nahi hai toh buttons bhejo
+        # Agar join nahi kiya hai toh buttons dikhayega
         markup = InlineKeyboardMarkup()
-        markup.add(InlineKeyboardButton("📢 Join Channel 1", url="https://t.me/your_channel_username"))
-        markup.add(InlineKeyboardButton("👥 Join Group", url="https://t.me/your_group_username"))
+        markup.add(InlineKeyboardButton("📢 Join Main Channel", url="https://t.me/studenthelpclub"))
+        markup.add(InlineKeyboardButton("👥 Join Chat Group", url="https://t.me/studenthelpclubofficial"))
         markup.add(InlineKeyboardButton("✅ JOINED", callback_data="verify_join"))
         
         bot.send_message(
             message.chat.id, 
-            "🔐 Bot use karne ke liye pehle hamare following channels/group ko join karein:", 
+            "🔐 Bot use karne ke liye pehle hamare niche diye gaye dono channel/group ko join karein:", 
             reply_markup=markup
         )
 
@@ -50,19 +51,19 @@ def verify_callback(call):
     user_id = call.from_user.id
     
     if check_membership(user_id):
-        # 1. Join wala message delete karein
+        # 1. Join karne ke baad pichla button wala message delete karein
         try:
             bot.delete_message(call.message.chat.id, call.message.message_id)
         except Exception as e:
             print("Message delete nahi ho paya:", e)
             
         # 2. Final link bhej dein
-        bot.send_message(call.message.chat.id, f"Verification successful! ✅\nYe raha aapka main group: {FINAL_GROUP_LINK}")
+        bot.send_message(call.message.chat.id, f"Verification successful! ✅\nYe raha aapka Ignou Solved Assignment group: {FINAL_GROUP_LINK}")
     else:
-        # Pop-up alert agar join nahi kiya hai
-        bot.answer_callback_query(call.id, "Aapne abhi tak sabhi channels join nahi kiye hain. Kripya pehle join karein!", show_alert=True)
+        # Pop-up alert agar bina join kiye button dabaya
+        bot.answer_callback_query(call.id, "Aapne abhi tak sabhi channels join nahi kiye hain. Kripya dono ko join karein!", show_alert=True)
 
-# Vercel Webhook Setup
+# Vercel Webhook Setup (Isme koi change nahi karna hai)
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>', methods=['POST', 'GET'])
 def webhook(path):
