@@ -35,25 +35,34 @@ def get_main_menu():
     markup.add(btn_group, btn_website, btn_jobs, btn_tools)
     return markup
 
-@bot.message_handler(commands=['start'])
+# Yahan /start aur /restart dono commands handle hongi
+@bot.message_handler(commands=['start', 'restart'])
 def send_welcome(message):
     user_id = message.from_user.id
+    command = message.text.split()[0].lower() # Check karega user ne kya type kiya
     
-    # 🧹 Yahan chat clean karne ka code add kiya gaya hai
+    # User ne jo command bheja hai, usko turant delete kar dega chat clean rakhne ke liye
     try:
-        # User ne jo '/start' bheja hai usko delete karega
         bot.delete_message(message.chat.id, message.message_id)
-        # Bot ka theek isse pehle wala purana message delete karega
-        bot.delete_message(message.chat.id, message.message_id - 1)
     except Exception:
-        pass # Agar purana message nahi mila toh error ignore kar dega
+        pass
 
     if check_membership(user_id):
-        welcome_back = (
-            "👋 <b>Welcome back to Student Help Club!</b>\n\n"
-            "Aap already verified member hain. 🎉\n\n"
-            "👇 <i>Neeche diye gaye buttons se apni zaroorat ka option select karein:</i>"
-        )
+        # Agar user ne /restart bheja hai
+        if command == '/restart':
+            welcome_back = (
+                "🔄 <b>Menu Restarted Successfully!</b>\n\n"
+                "Aap already verified member hain. 🎉\n\n"
+                "👇 <i>Neeche diye gaye buttons se apni zaroorat ka option select karein:</i>"
+            )
+        # Agar user ne /start bheja hai
+        else:
+            welcome_back = (
+                "👋 <b>Welcome back to Student Help Club!</b>\n\n"
+                "Aap already verified member hain. 🎉\n\n"
+                "👇 <i>Neeche diye gaye buttons se apni zaroorat ka option select karein:</i>"
+            )
+            
         bot.send_message(
             message.chat.id, 
             welcome_back, 
