@@ -35,27 +35,26 @@ def get_main_menu():
     markup.add(btn_group, btn_website, btn_jobs, btn_tools)
     return markup
 
-# Yahan /start aur /restart dono commands handle hongi
 @bot.message_handler(commands=['start', 'restart'])
 def send_welcome(message):
     user_id = message.from_user.id
-    command = message.text.split()[0].lower() # Check karega user ne kya type kiya
+    command = message.text.split()[0].lower() 
     
-    # User ne jo command bheja hai, usko turant delete kar dega chat clean rakhne ke liye
-    try:
-        bot.delete_message(message.chat.id, message.message_id)
-    except Exception:
-        pass
+    # 🧹 SMART CHAT CLEANER: Ye current command aur pichle kuch messages ko dhundh kar delete karega
+    # Range 6 ka matlab hai: current message aur usse pehle ke 5 messages clean karega
+    for i in range(message.message_id, message.message_id - 6, -1):
+        try:
+            bot.delete_message(message.chat.id, i)
+        except Exception:
+            pass # Agar koi message pehle se delete ho chuka hai, toh error ignore karega
 
     if check_membership(user_id):
-        # Agar user ne /restart bheja hai
         if command == '/restart':
             welcome_back = (
                 "🔄 <b>Menu Restarted Successfully!</b>\n\n"
                 "Aap already verified member hain. 🎉\n\n"
                 "👇 <i>Neeche diye gaye buttons se apni zaroorat ka option select karein:</i>"
             )
-        # Agar user ne /start bheja hai
         else:
             welcome_back = (
                 "👋 <b>Welcome back to Student Help Club!</b>\n\n"
@@ -95,6 +94,7 @@ def verify_callback(call):
     
     if check_membership(user_id):
         try:
+            # JOINED button dabane par wo purana verify wala message delete ho jayega
             bot.delete_message(call.message.chat.id, call.message.message_id)
         except Exception as e:
             pass 
