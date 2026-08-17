@@ -3,8 +3,7 @@ import telebot
 from flask import Flask, request
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-# Token direct likhne ke bajaye os.getenv ka use karein
-TOKEN = os.getenv("8738828553:AAE-bUM0YJ02FvGiA6qjAyfIg1QD6cly2v8")
+TOKEN = os.getenv("TELEGRAM_TOKEN")
 bot = telebot.TeleBot(TOKEN, threaded=False)
 app = Flask(__name__)
 
