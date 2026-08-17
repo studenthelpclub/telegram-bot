@@ -172,7 +172,9 @@ def continuous_check(message):
                     reply_markup=get_main_menu()
                 )
 
+# Yahan dono routes add kar diye gaye hain taaki koi 404 error na aaye
 @app.route('/', methods=['GET', 'POST'])
+@app.route('/api/index', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
         json_string = request.get_data().decode('utf-8')
