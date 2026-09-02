@@ -19,6 +19,9 @@ ASSIGNMENT_WEBSITE = "https://studenthelpclub.in"
 JOBS_WEBSITE = "https://jobs.studenthelpclub.in"
 UTILITY_TOOLS = "https://shctools.in/"
 
+# User states ko track karne ke liye temporary memory (enrollment input ke liye)
+WAITING_FOR_ENROLLMENT = set()
+
 def check_membership(user_id):
     """Checks if the user is present in all REQUIRED_CHATS."""
     for chat_id in REQUIRED_CHATS:
@@ -32,13 +35,14 @@ def check_membership(user_id):
     return True
 
 def get_main_menu():
-    """Generates the main menu markup."""
+    """Generates the main menu markup with Check Result button."""
     markup = InlineKeyboardMarkup(row_width=1)
+    btn_result = InlineKeyboardButton("🔍 Check IGNOU Result", callback_data="start_check_result")
     btn_group = InlineKeyboardButton("📚 IGNOU Solved Assignments", url=FINAL_GROUP_LINK)
     btn_website = InlineKeyboardButton("🌐 Assignment Website", url=ASSIGNMENT_WEBSITE)
     btn_jobs = InlineKeyboardButton("💼 Jobs Updates", url=JOBS_WEBSITE)
     btn_tools = InlineKeyboardButton("🛠️ Utility Tools", url=UTILITY_TOOLS)
-    markup.add(btn_group, btn_website, btn_jobs, btn_tools)
+    markup.add(btn_result, btn_group, btn_website, btn_jobs, btn_tools)
     return markup
 
 def send_join_message(chat_id):
@@ -66,8 +70,6 @@ def send_welcome(message):
     user_id = message.from_user.id
     command = message.text.split()[0].lower() 
     
-    # Message delete karne wala loop HATA DIYA GAYA HAI
-    
     if check_membership(user_id):
         if command == '/restart':
             welcome_text = "🔄 <b>Menu Restarted Successfully!</b>\n\n"
@@ -85,7 +87,6 @@ def send_welcome(message):
             reply_markup=get_main_menu()
         )
     else:
-        # Agar start dabaya aur member nahi hai (ya leave kar diya), toh join msg bhejo
         send_join_message(message.chat.id)
 
 @bot.callback_query_handler(func=lambda call: call.data == "verify_join")
@@ -101,7 +102,7 @@ def verify_callback(call):
         success_msg = (
             "✅ <b>Verification Successful!</b>\n\n"
             "Dhanyawad! Ab aap Student Help Club ke verified member hain. 🎉\n\n"
-            "👇 <i>Neeche diye gaye buttons se Assignment website, Jobs, Tools ya secret group access karein:</i>"
+            "👇 <i>Neeche diye gaye buttons se Result check karein, Assignment website, Jobs ya tools access karein:</i>"
         )
         bot.send_message(
             call.message.chat.id, 
@@ -116,6 +117,23 @@ def verify_callback(call):
             show_alert=False
         )
 
+# Jab user "Check Result" button click karega
+@bot.callback_query_handler(func=lambda call: call.data == "start_check_result")
+def prompt_enrollment(call):
+    user_id = call.from_user.id
+    if not check_membership(user_id):
+        bot.answer_callback_query(call.id, "❌ Kripya pehle channels join karein!", show_alert=True)
+        send_join_message(call.message.chat.id)
+        return
+    
+    WAITING_FOR_ENROLLMENT.add(user_id)
+    bot.answer_callback_query(call.id)
+    bot.send_message(
+        call.message.chat.id,
+        "📝 <b>Apna Enrollment Number yahan type karke bhejein:</b>",
+        parse_mode='HTML'
+    )
+
 def is_admin(chat_id, user_id):
     try:
         member = bot.get_chat_member(chat_id, user_id)
@@ -123,7 +141,6 @@ def is_admin(chat_id, user_id):
     except:
         return False
 
-# Hamesha check karne wala logic: Jab bhi koi message aayega, ye pehle check karega
 @bot.message_handler(func=lambda message: True, content_types=['text', 'audio', 'document', 'photo', 'sticker', 'video', 'video_note', 'voice', 'location', 'contact'])
 def continuous_check(message):
     user_id = message.from_user.id
@@ -134,13 +151,12 @@ def continuous_check(message):
         if is_admin(message.chat.id, user_id):
             return
         
-        # Agar wo required channels me nahi hai (leave kar chuka hai), toh message delete kardo
         if not check_membership(user_id):
             try:
                 bot.delete_message(message.chat.id, message.message_id)
             except Exception:
                 pass
-            return # Aage check karne ki zaroorat nahi
+            return 
             
         if message.content_type == 'document':
             file_name = message.document.file_name.lower() if message.document.file_name else ""
@@ -155,24 +171,40 @@ def continuous_check(message):
             
     # 2. Agar user direct bot se baat kar raha hai (Private Chat)
     elif chat_type == 'private':
-        # Agar member nahi hai, toh join ka message do
         if not check_membership(user_id):
              send_join_message(message.chat.id)
         else:
-            # Agar valid member hai aur text bhej raha hai (jo command nahi hai), toh usey menu dikhao
             if message.content_type == 'text' and not message.text.startswith('/'):
-                 welcome_text = (
-                    "Aap already verified member hain. 🎉\n\n"
-                    "👇 <i>Neeche diye gaye buttons se apni zaroorat ka option select karein:</i>"
-                )
-                 bot.send_message(
-                    message.chat.id, 
-                    welcome_text, 
-                    parse_mode='HTML', 
-                    reply_markup=get_main_menu()
-                )
+                # Check karo kya user ne Result ke liye enrollment number bheja hai?
+                if user_id in WAITING_FOR_ENROLLMENT:
+                    WAITING_FOR_ENROLLMENT.remove(user_id)
+                    enr_number = message.text.strip()
+                    
+                    # Aapka manga gaya professional message
+                    professional_msg = (
+                        f"✅ <b>Enrollment Number ({enr_number}) received!</b>\n\n"
+                        "⏳ Kuch der mein result isi chat mein aa jayega, "
+                        "kripya channel koi leave na karein free assignment aur update ke liye."
+                    )
+                    bot.send_message(
+                        message.chat.id, 
+                        professional_msg, 
+                        parse_mode='HTML', 
+                        reply_markup=get_main_menu()
+                    )
+                else:
+                     welcome_text = (
+                        "Aap already verified member hain. 🎉\n\n"
+                        "👇 <i>Neeche diye gaye buttons se apni zaroorat ka option select karein:</i>"
+                    )
+                     bot.send_message(
+                        message.chat.id, 
+                        welcome_text, 
+                        parse_mode='HTML', 
+                        reply_markup=get_main_menu()
+                    )
 
-# Yahan dono routes add kar diye gaye hain taaki koi 404 error na aaye
+# Vercel Flask Routes
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/api/index', methods=['GET', 'POST'])
 def index():
